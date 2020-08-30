@@ -7,6 +7,9 @@
 
 '''
 blender --background --python render_blender.py -- --output_folder /home/mprabhud/dataset/stanford_shapenet /home/mprabhud/dataset/preprocessed_shapenet_4/02958343_ffbf897d9867fadff9a62a8acc9e8cfe.obj
+
+1. Single obj rendering
+blender --background --python render_blender.py -- --output_folder /home/mprabhud/dataset/stanford_shapenet /home/mprabhud/dataset/preprocessed_shapenet_4/02958343_ffbf897d9867fadff9a62a8acc9e8cfe.obj --format OPEN_EXR --color_depth 16
 '''
 import argparse, sys, os
 import ipdb 
@@ -26,7 +29,7 @@ parser.add_argument('--edge_split', type=bool, default=True,
                     help='Adds edge split filter.')
 parser.add_argument('--depth_scale', type=float, default=1.4,
                     help='Scaling that is applied to depth. Depends on size of mesh. Try out various values until you get a good result. Ignored if format is OPEN_EXR.')
-parser.add_argument('--color_depth', type=str, default='8',
+parser.add_argument('--color_depth', type=str, default='16',
                     help='Number of bit per channel used for output. Either 8 or 16.')
 parser.add_argument('--format', type=str, default='OPEN_EXR',
                     help='Format of files generated. Either PNG or OPEN_EXR')
@@ -161,7 +164,9 @@ cam_constraint.up_axis = 'UP_Y'
 b_empty = parent_obj_to_camera(cam)
 cam_constraint.target = b_empty
 
-model_identifier = os.path.split(os.path.split(args.obj)[0])[1]
+# model_identifier = os.path.split(os.path.split(args.obj)[0])[1]
+model_identifier = args.obj.split('/')[-1][:-4]
+# st()
 fp = os.path.join(args.output_folder, model_identifier, model_identifier)
 scene.render.image_settings.file_format = 'PNG'  # set output format to .png
 
@@ -185,6 +190,7 @@ for theta in THETAS:
         cam.location = obj_centered_camera_pos(radius, theta, phi)
         # scene.render.filepath = fp + '_r_{0:03d}'.format(int(i * stepsize))
         scene.render.filepath = fp + '_{}_{}_'.format(theta, phi)
+        # st()
         depth_file_output.file_slots[0].path = scene.render.filepath + "_depth.png"
         normal_file_output.file_slots[0].path = scene.render.filepath + "_normal.png"
         albedo_file_output.file_slots[0].path = scene.render.filepath + "_albedo.png"
