@@ -5,8 +5,12 @@
 # blender --background --python mytest.py -- --views 10 /path/to/my.obj
 #
 
+'''
+blender --background --python render_blender.py -- --output_folder /home/mprabhud/dataset/stanford_shapenet /home/mprabhud/dataset/preprocessed_shapenet_4/02958343_ffbf897d9867fadff9a62a8acc9e8cfe.obj
+'''
 import argparse, sys, os
-
+import ipdb 
+st = ipdb.set_trace
 parser = argparse.ArgumentParser(description='Renders given obj file by rotation a camera around it.')
 parser.add_argument('--views', type=int, default=30,
                     help='number of views to be rendered')
@@ -24,7 +28,7 @@ parser.add_argument('--depth_scale', type=float, default=1.4,
                     help='Scaling that is applied to depth. Depends on size of mesh. Try out various values until you get a good result. Ignored if format is OPEN_EXR.')
 parser.add_argument('--color_depth', type=str, default='8',
                     help='Number of bit per channel used for output. Either 8 or 16.')
-parser.add_argument('--format', type=str, default='PNG',
+parser.add_argument('--format', type=str, default='OPEN_EXR',
                     help='Format of files generated. Either PNG or OPEN_EXR')
 
 argv = sys.argv[sys.argv.index("--") + 1:]
@@ -68,13 +72,13 @@ else:
 
 scale_normal = tree.nodes.new(type="CompositorNodeMixRGB")
 scale_normal.blend_type = 'MULTIPLY'
-# scale_normal.use_alpha = True
+scale_normal.use_alpha = True
 scale_normal.inputs[2].default_value = (0.5, 0.5, 0.5, 1)
 links.new(render_layers.outputs['Normal'], scale_normal.inputs[1])
 
 bias_normal = tree.nodes.new(type="CompositorNodeMixRGB")
 bias_normal.blend_type = 'ADD'
-# bias_normal.use_alpha = True
+bias_normal.use_alpha = True
 bias_normal.inputs[2].default_value = (0.5, 0.5, 0.5, 0)
 links.new(scale_normal.outputs[0], bias_normal.inputs[1])
 
@@ -123,6 +127,14 @@ lamp2.energy = 0.015
 bpy.data.objects['Sun'].rotation_euler = bpy.data.objects['Lamp'].rotation_euler
 bpy.data.objects['Sun'].rotation_euler[0] += 180
 
+def obj_centered_camera_pos(dist, azimuth_deg, elevation_deg):
+    import math
+    phi = float(elevation_deg) / 180 * math.pi
+    theta = float(azimuth_deg) / 180 * math.pi
+    x = (dist * math.cos(theta) * math.cos(phi))
+    y = (dist * math.sin(theta) * math.cos(phi))
+    z = (dist * math.sin(phi))
+    return x, y, z
 
 def parent_obj_to_camera(b_camera):
     origin = (0, 0, 0)
@@ -137,12 +149,12 @@ def parent_obj_to_camera(b_camera):
 
 
 scene = bpy.context.scene
-scene.render.resolution_x = 600
-scene.render.resolution_y = 600
+scene.render.resolution_x = 256
+scene.render.resolution_y = 256
 scene.render.resolution_percentage = 100
 scene.render.alpha_mode = 'TRANSPARENT'
 cam = scene.objects['Camera']
-cam.location = (0, 1, 0.6)
+cam.location = (0+5, 1+5, 0.6+5)
 cam_constraint = cam.constraints.new(type='TRACK_TO')
 cam_constraint.track_axis = 'TRACK_NEGATIVE_Z'
 cam_constraint.up_axis = 'UP_Y'
@@ -158,17 +170,25 @@ from math import radians
 stepsize = 360.0 / args.views
 rotation_mode = 'XYZ'
 
-for output_node in [depth_file_output, normal_file_output, albedo_file_output]:
+for output_node in [depth_file_output]:#, normal_file_output, albedo_file_output]:
     output_node.base_path = ''
 
-for i in range(0, args.views):
-    print("Rotation {}, {}".format((stepsize * i), radians(stepsize * i)))
+radius = 8
+THETAS = list(range(0, 360, 45))
+PHIS = list(range(20, 80, 20))
+i=0
+for theta in THETAS:
+    for phi in PHIS:
+        i+=1
+        # for i in range(0, args.views):
+        print("Rotation {}, {}".format((stepsize * i), radians(stepsize * i)))
+        cam.location = obj_centered_camera_pos(radius, theta, phi)
+        # scene.render.filepath = fp + '_r_{0:03d}'.format(int(i * stepsize))
+        scene.render.filepath = fp + '_{}_{}_'.format(theta, phi)
+        depth_file_output.file_slots[0].path = scene.render.filepath + "_depth.png"
+        normal_file_output.file_slots[0].path = scene.render.filepath + "_normal.png"
+        albedo_file_output.file_slots[0].path = scene.render.filepath + "_albedo.png"
 
-    scene.render.filepath = fp + '_r_{0:03d}'.format(int(i * stepsize))
-    depth_file_output.file_slots[0].path = scene.render.filepath + "_depth.png"
-    normal_file_output.file_slots[0].path = scene.render.filepath + "_normal.png"
-    albedo_file_output.file_slots[0].path = scene.render.filepath + "_albedo.png"
-
-    bpy.ops.render.render(write_still=True)  # render still
-
-    b_empty.rotation_euler[2] += radians(stepsize)
+        bpy.ops.render.render(write_still=True)  # render still
+        # st()
+        # b_empty.rotation_euler[2] += radians(stepsize)

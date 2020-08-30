@@ -1,0 +1,1 @@
+rsync -av ./ cmu1:/home/mprabhud/shamit/stanford-shapenet-renderer
