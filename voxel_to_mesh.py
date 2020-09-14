@@ -6,6 +6,8 @@ import numpy as np
 
 
 def save_voxel_to_mesh(voxel_grid, output_fname):
+    voxel_grid = (voxel_grid>0.5)
+    voxel_grid = voxel_grid.astype(np.float)
 
     verts, faces, normals, values = mcl(voxel_grid, 0.0)
 
