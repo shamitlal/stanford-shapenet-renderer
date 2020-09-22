@@ -179,7 +179,7 @@ for output_node in [depth_file_output]:#, normal_file_output, albedo_file_output
     output_node.base_path = ''
 
 radius = 8
-THETAS = list(range(0, 360, 10))
+THETAS = list(range(0, 360, 45))
 PHIS = list(range(20, 80, 20))
 i=0
 for theta in THETAS:
