@@ -31,3 +31,11 @@ To speed up the process, you can also use xargs to have multiple blender instanc
 Here is one chair model rendered with 30 different views:
 
 ![Chairs](examples/out_without_specular.png)
+blender --background --python render_blender.py -- --output_folder /home/mprabhud/dataset/stanford_shapenet /home/mprabhud/dataset/preprocessed_shapenet_4/02958343_ffbf897d9867fadff9a62a8acc9e8cfe.obj --format OPEN_EXR --color_depth 16
+
+find /home/mprabhud/dataset/out_shapenet_splits/split0  -name *.obj -print0 | xargs -0 -n1 -P6 -I {} blender --background --python r
+ender_blender.py -- --output_folder /home/mprabhud/dataset/shapenet_renders/cars/ {} --format OPEN_EXR --color_depth 16
+
+find /home/mprabhud/dataset/out_shapenet_splits/split1  -name *.obj -print0 | xargs -0 -n1 -P6 -I {} blender --background --python render_blender.py -- --output_folder /home/mprabhud/dataset/shapenet_renders/cars/ {} --format OPEN_EXR --color_depth 16
+
+find /home/mprabhud/dataset/out_shapenet_splits/split2  -name *.obj -print0 | xargs -0 -n1 -P6 -I {} blender --background --python render_blender.py -- --output_folder /home/mprabhud/dataset/shapenet_renders/cars/ {} --format OPEN_EXR --color_depth 16
