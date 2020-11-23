@@ -33,7 +33,8 @@ parser.add_argument('--color_depth', type=str, default='16',
                     help='Number of bit per channel used for output. Either 8 or 16.')
 parser.add_argument('--format', type=str, default='OPEN_EXR',
                     help='Format of files generated. Either PNG or OPEN_EXR')
-
+parser.add_argument('--radius', type=float, default=8.0,
+                    help='Radius at which camera is placed')
 argv = sys.argv[sys.argv.index("--") + 1:]
 args = parser.parse_args(argv)
 
@@ -164,6 +165,7 @@ cam_constraint.up_axis = 'UP_Y'
 b_empty = parent_obj_to_camera(cam)
 cam_constraint.target = b_empty
 
+
 # model_identifier = os.path.split(os.path.split(args.obj)[0])[1]
 model_identifier = args.obj.split('/')[-1][:-4]
 # st()
@@ -178,7 +180,7 @@ rotation_mode = 'XYZ'
 for output_node in [depth_file_output]:#, normal_file_output, albedo_file_output]:
     output_node.base_path = ''
 
-radius = 8
+radius = args.radius
 THETAS = list(range(0, 360, 45))
 PHIS = list(range(20, 80, 20))
 i=0
@@ -195,6 +197,8 @@ for theta in THETAS:
         normal_file_output.file_slots[0].path = scene.render.filepath + "_normal.png"
         albedo_file_output.file_slots[0].path = scene.render.filepath + "_albedo.png"
 
+        # bpy.context.scene.render.film_transparent = True
+        bpy.context.scene.render.image_settings.color_mode = 'RGBA'
         bpy.ops.render.render(write_still=True)  # render still
         # st()
         # b_empty.rotation_euler[2] += radians(stepsize)
